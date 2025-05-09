@@ -9,10 +9,26 @@ const handleWindowClose = () => {
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow: BrowserWindow | null = null
 
+const getIconPath = () => {
+    if (app.isPackaged) {
+        return path.join(
+            process.resourcesPath,
+            process.platform === "win32" ? "icon.ico" : "icon.png"
+        )
+    }
+
+    switch (process.platform) {
+        case "win32":
+            return path.join(__dirname, "../../public/icon.ico")
+        case "darwin":
+            return path.join(__dirname, "../../public/icons/macos/icon_512x512.png")
+        default: // linux
+            return path.join(__dirname, "../../public/icon.png")
+    }
+}
+
 const createWindow = (): void => {
-    const iconPath = app.isPackaged
-        ? path.join(process.resourcesPath, "icon.ico")
-        : path.join(__dirname, "../../public/icon.ico")
+    const iconPath = getIconPath()
     // Create the browser window with secure defaults
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -53,9 +69,7 @@ const createWindow = (): void => {
     if (process.env.NODE_ENV === "development") {
         mainWindow.loadURL("http://localhost:9000")
         // Open the DevTools in development mode
-        setTimeout(() => {
-            mainWindow && mainWindow.webContents.openDevTools()
-        }, 5000)
+        mainWindow.webContents.openDevTools()
     } else {
         // In production, use the bundled renderer code
         mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"))

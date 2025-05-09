@@ -4,7 +4,7 @@ import { contextBridge, ipcRenderer } from "electron"
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld("api", {
     // Example IPC function - you can add more as needed
-    send: (channel: string, data: any) => {
+    send: (channel: string, data: unknown) => {
         // whitelist channels
         const validChannels = ["message-to-main"]
         if (validChannels.includes(channel)) {
