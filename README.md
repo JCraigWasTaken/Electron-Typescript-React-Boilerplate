@@ -96,7 +96,7 @@ Repository settings are automated via [Settings Probot](https://github.com/apps/
 
 ## Contributing
 
-1. Fork and clone
+1. fork and clone
 2. Create feature branch
 3. Make changes
 4. Run tests and checks
