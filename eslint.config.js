@@ -1,13 +1,13 @@
-import eslint from "@eslint/js"
-import tseslint from "@typescript-eslint/eslint-plugin"
-import tseslintParser from "@typescript-eslint/parser"
-import reactPlugin from "eslint-plugin-react"
-import reactHooksPlugin from "eslint-plugin-react-hooks"
-import prettierPlugin from "eslint-plugin-prettier"
-import prettierConfig from "eslint-config-prettier"
-import globals from "globals"
+const eslint = require("@eslint/js")
+const tseslint = require("@typescript-eslint/eslint-plugin")
+const tseslintParser = require("@typescript-eslint/parser")
+const reactPlugin = require("eslint-plugin-react")
+const reactHooksPlugin = require("eslint-plugin-react-hooks")
+const prettierPlugin = require("eslint-plugin-prettier")
+const prettierConfig = require("eslint-config-prettier")
+const globals = require("globals")
 
-export default [
+module.exports = [
     eslint.configs.recommended,
     {
         files: ["**/*.{ts,tsx,js,jsx}"],

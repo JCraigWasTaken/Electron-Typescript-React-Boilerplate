@@ -1,8 +1,3 @@
-// Polyfill global
-if (typeof global === "undefined") {
-    window.global = window
-}
-
 import React from "react"
 import { createRoot } from "react-dom/client"
 import { ThemeProvider, createTheme } from "@mui/material/styles"

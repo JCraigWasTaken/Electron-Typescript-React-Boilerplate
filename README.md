@@ -30,7 +30,7 @@ git clone <your-repo-url>
 # Navigate to the project directory
 cd electron-typescript-react-boilerplate
 
-# Install dependencies
+# Install dependencies and set up git hooks
 npm install
 ```
 
