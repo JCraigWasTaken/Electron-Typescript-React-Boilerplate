@@ -31,7 +31,7 @@ jobs:
 
             - name: Install dependencies
               if: steps.node-cache.outputs.cache-hit != 'true'
-              run: npm ci
+              run: npm ci --legacy-peer-deps
 
             - name: Check formatting
               run: npm run format:check
