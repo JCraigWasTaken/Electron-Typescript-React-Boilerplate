@@ -13,7 +13,7 @@ const App: React.FC = () => {
                             Electron TypeScript React App
                         </Typography>
                         <Button color="inherit" component={Link} to="/">
-                            Away
+                            Home
                         </Button>
                         <Button color="inherit" component={Link} to="/about">
                             About
