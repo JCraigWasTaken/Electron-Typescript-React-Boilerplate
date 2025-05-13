@@ -19,18 +19,7 @@ jobs:
                   node-version: "20"
                   cache: "npm"
 
-            # Restore cache for node_modules
-            - name: Cache node_modules
-              uses: actions/cache@v4
-              id: node-cache
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-                  restore-keys: |
-                      ${{ runner.os }}-node-
-
             - name: Install dependencies
-              if: steps.node-cache.outputs.cache-hit != 'true'
               run: npm ci --legacy-peer-deps
 
             - name: Check formatting
@@ -40,13 +29,8 @@ jobs:
               run: npm run lint
 
             - name: Run tests with coverage
-              run: npm run test:coverage
+              run: npm run test:coverage -- --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
 
-            # Generate HTML coverage report
-            - name: Generate coverage report
-              run: npx jest --coverage --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
-
-            # Upload HTML coverage report
             - name: Upload coverage report
               uses: actions/upload-artifact@v4
               with:
@@ -70,35 +54,23 @@ jobs:
                   node-version: "20"
                   cache: "npm"
 
-            # Restore cache for node_modules
-            - name: Cache node_modules
-              uses: actions/cache@v4
-              id: node-cache
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-                  restore-keys: |
-                      ${{ runner.os }}-node-
-
             - name: Install dependencies
-              if: steps.node-cache.outputs.cache-hit != 'true'
               run: npm ci --legacy-peer-deps
 
-            # Cache build outputs
-            - name: Cache build
+            - name: Cache build outputs
               uses: actions/cache@v4
               with:
                   path: |
                       dist
                       .webpack
-                  key: ${{ runner.os }}-build-${{ github.sha }}
+                  key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
                   restore-keys: |
+                      ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-
                       ${{ runner.os }}-build-
 
             - name: Build application
               run: npm run build
 
-            # Test distribution build based on OS
             - name: Build distribution (Windows)
               if: matrix.os == 'windows-latest'
               run: npm run dist:win
@@ -111,7 +83,6 @@ jobs:
               if: matrix.os == 'ubuntu-latest'
               run: npm run dist:linux
 
-            # Upload artifacts
             - name: Upload distribution artifacts
               uses: actions/upload-artifact@v4
               with:

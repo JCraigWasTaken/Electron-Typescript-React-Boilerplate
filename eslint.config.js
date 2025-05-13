@@ -50,10 +50,24 @@ module.exports = [
             "@typescript-eslint/no-unsafe-function-type": "off",
             "@typescript-eslint/no-require-imports": "off",
             "prettier/prettier": ["error"],
+            "react/display-name": "off", // Turning off display-name rule
         },
         settings: {
             react: {
                 version: "detect",
+            },
+        },
+    },
+    {
+        files: [
+            "**/*.test.{ts,tsx,js,jsx}",
+            "**/*.spec.{ts,tsx,js,jsx}",
+            "**/jest.*.js",
+            "**/jest.config.js",
+        ],
+        languageOptions: {
+            globals: {
+                ...globals.jest,
             },
         },
     },
