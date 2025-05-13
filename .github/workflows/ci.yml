@@ -18,6 +18,7 @@ jobs:
               with:
                   node-version: "20"
                   cache: "npm"
+                  cache-dependency-path: '**/package-lock.json'
 
             - name: Install dependencies
               run: npm ci --legacy-peer-deps
@@ -32,7 +33,7 @@ jobs:
               run: npm run test:coverage -- --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
 
             - name: Upload coverage report
-              if: always()  # Run even if tests fail
+              if: always() # Run even if tests fail
               uses: actions/upload-artifact@v4
               with:
                   name: coverage-report
@@ -64,9 +65,10 @@ jobs:
                   path: |
                       dist
                       .webpack
-                  key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+                      node_modules/.cache
+                  key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', 'webpack.config.js') }}-${{ github.sha }}
                   restore-keys: |
-                      ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-
+                      ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', 'webpack.config.js') }}-
                       ${{ runner.os }}-build-
 
             # OS-specific distribution builds
@@ -81,11 +83,3 @@ jobs:
             - name: Build distribution (Linux)
               if: matrix.os == 'ubuntu-latest'
               run: npm run dist:linux
-
-            - name: Upload distribution artifacts
-              if: always()  # Upload artifacts even if build fails
-              uses: actions/upload-artifact@v4
-              with:
-                  name: dist-${{ matrix.os }}
-                  path: release/
-                  retention-days: 7
