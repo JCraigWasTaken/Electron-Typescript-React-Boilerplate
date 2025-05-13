@@ -1,83 +1,24 @@
 name: Build
+
 on:
-    # Allows manual triggering from the Actions tab
-    workflow_dispatch:
-        inputs:
-            pr_number:
-                description: "Pull Request Number"
-                required: true
-                type: string
-            sha:
-                description: "Commit SHA to build"
-                required: true
-                type: string
+    workflow_call: {}  # This makes the workflow reusable
+    workflow_dispatch: {}  # This allows manual triggering
 
 jobs:
-    # This job validates the PR number and SHA before starting the build
-    validate-pr:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Validate PR and SHA
-              id: validate
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      const pr = ${{ github.event.inputs.pr_number }};
-                      const sha = '${{ github.event.inputs.sha }}';
-
-                      // Get PR details
-                      try {
-                        const { data: pullRequest } = await github.rest.pulls.get({
-                          owner: context.repo.owner,
-                          repo: context.repo.name,
-                          pull_number: pr
-                        });
-                        
-                        // Verify that the SHA matches the head of the PR
-                        if (pullRequest.head.sha !== sha) {
-                          core.setFailed(`SHA ${sha} does not match the head of PR #${pr} (${pullRequest.head.sha})`);
-                          return;
-                        }
-                        
-                        core.info(`Validated PR #${pr} at SHA ${sha}`);
-                        return {prTitle: pullRequest.title, prUrl: pullRequest.html_url};
-                      } catch (error) {
-                        core.setFailed(`Failed to validate PR: ${error.message}`);
-                      }
-        outputs:
-            prTitle: ${{ steps.validate.outputs.result.prTitle }}
-            prUrl: ${{ steps.validate.outputs.result.prUrl }}
-
-    # This is the actual build job
     build:
-        needs: validate-pr
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
-            # Don't cancel all builds if one fails
-            fail-fast: false
         steps:
             - uses: actions/checkout@v4
-              with:
-                  ref: ${{ github.event.inputs.sha }}
-
-            # Update PR status to show build is in progress
-            - name: Set build status to pending
-              uses: Sibz/github-status-action@v1
-              with:
-                  authToken: ${{ secrets.GITHUB_TOKEN }}
-                  context: "build (${{ matrix.os }})"
-                  description: "Build in progress"
-                  state: "pending"
-                  sha: ${{ github.event.inputs.sha }}
 
             - name: Set up Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
                   cache: npm
-                  cache-dependency-path: "**/package-lock.json"
+                  cache-dependency-path: '**/package-lock.json'
 
             - name: Install dependencies
               run: npm ci --legacy-peer-deps
@@ -95,32 +36,10 @@ jobs:
               if: matrix.os == 'ubuntu-latest'
               run: npm run dist:linux
 
-            # Upload build artifacts
             - name: Upload distribution artifacts
-              if: always() # Upload artifacts even if build fails
+              if: always()  # Upload artifacts even if build fails
               uses: actions/upload-artifact@v4
               with:
                   name: dist-${{ matrix.os }}
                   path: release/
                   retention-days: 7
-
-            # Update PR status to reflect build result
-            - name: Set build status to success
-              if: success()
-              uses: Sibz/github-status-action@v1
-              with:
-                  authToken: ${{ secrets.GITHUB_TOKEN }}
-                  context: "build (${{ matrix.os }})"
-                  description: "Build succeeded"
-                  state: "success"
-                  sha: ${{ github.event.inputs.sha }}
-
-            - name: Set build status to failure
-              if: failure()
-              uses: Sibz/github-status-action@v1
-              with:
-                  authToken: ${{ secrets.GITHUB_TOKEN }}
-                  context: "build (${{ matrix.os }})"
-                  description: "Build failed"
-                  state: "failure"
-                  sha: ${{ github.event.inputs.sha }}
