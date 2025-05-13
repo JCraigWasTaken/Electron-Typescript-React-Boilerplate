@@ -9,6 +9,11 @@
         "strings": true
     },
     "files.eol": "\n",
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/dist/**": true,
+        "**/release/**": true
+    },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },

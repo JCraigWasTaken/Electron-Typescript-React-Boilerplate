@@ -110,13 +110,75 @@ The built applications will be available in the `release` directory.
 - **TypeScript** - Configure TypeScript settings in `tsconfig.json`
 - **ESLint** - Configure linting rules in `eslint.config.js`
 - **Prettier** - Configure code formatting in `.prettierrc`
+- **VSCode** - Pre-configured settings in `.vscode/settings.json`
+
+### Editor Setup
+
+VSCode or VSCode-based editors (like VSCodium) are recommended for the best development experience. The project includes pre-configured settings and recommended extensions.
+
+Required VSCode Extensions:
+
+- ESLint (`dbaeumer.vscode-eslint`)
+- Prettier (`esbenp.prettier-vscode`)
+- TypeScript Support (`ms-vscode.vscode-typescript-next`)
+
+These extensions will be automatically suggested when you open the project in VSCode. Once installed, you'll get:
+
+- Automatic formatting on save using Prettier
+- Real-time ESLint error detection and auto-fixing
+- Enhanced TypeScript/JavaScript support
+- Consistent line endings across platforms
+
+## GitHub Configuration
+
+### Branch Protection
+
+The `main` branch is protected with the following rules:
+- Requires at least one review before merging
+- Requires all status checks to pass:
+  - Code quality (formatting, linting, tests)
+  - Builds on Windows, macOS, and Linux
+- Enforces linear history
+- Allows force pushes by administrators
+
+### Pull Requests
+
+- Squash merging is enabled (other merge types disabled)
+- Branches are automatically deleted after merging
+- PR template includes:
+  - Description of changes
+  - Type of change checklist
+  - Testing verification
+  - Screenshot section (if applicable)
+  - Additional notes section
+
+### Continuous Integration
+
+Every PR and push to main triggers:
+1. **Quality Checks**:
+   - Code formatting verification
+   - Linting
+   - Unit tests with coverage requirements (70% threshold)
+   - Coverage report generation
+
+2. **Build Verification**:
+   - Cross-platform builds (Windows, macOS, Linux)
+   - Distribution package creation
+   - Artifact preservation
+
+### Artifacts
+
+- Test coverage reports (retained for 14 days)
+- Distribution builds (retained for 7 days)
 
 ## Contributing
 
 1. Fork the repository
 2. Create a new branch
-3. Make your changes
-4. Submit a pull request
+3. Make your changes following the project's coding standards
+4. Ensure all tests pass and coverage requirements are met
+5. Submit a pull request using the provided template
+6. Address any review comments
 
 ## License
 
