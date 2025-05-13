@@ -1,5 +1,4 @@
 name: CI
-
 on:
     pull_request:
         types: [opened, synchronize, reopened, ready_for_review]
@@ -11,30 +10,43 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-
             - name: Set up Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
                   cache: npm
-                  cache-dependency-path: '**/package-lock.json'
-
+                  cache-dependency-path: "**/package-lock.json"
             - name: Install dependencies
               run: npm ci --legacy-peer-deps
-
             - name: Check formatting
               run: npm run format:check
-
             - name: Run linting
               run: npm run lint
-
             - name: Run tests with coverage
               run: npm run test:coverage -- --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
-
             - name: Upload coverage report
-              if: always()  # Run even if tests fail
+              if: always() # Run even if tests fail
               uses: actions/upload-artifact@v4
               with:
                   name: coverage-report
                   path: coverage/
                   retention-days: 14
+
+    # This job creates a placeholder that signals build readiness
+    # but doesn't actually run the build yet
+    build-check:
+        needs: quality
+        runs-on: ubuntu-latest
+        outputs:
+            matrix: '["ubuntu-latest", "windows-latest", "macos-latest"]'
+        steps:
+            - name: Set build status to pending
+              run: echo "::notice::Build check is pending manual trigger"
+            - name: Create status check
+              uses: Sibz/github-status-action@v1
+              with:
+                  authToken: ${{ secrets.GITHUB_TOKEN }}
+                  context: "build-pending"
+                  description: "Build needs to be manually triggered"
+                  state: "success"
+                  sha: ${{ github.event.pull_request.head.sha || github.sha }}

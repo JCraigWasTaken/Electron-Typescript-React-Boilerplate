@@ -1,25 +1,82 @@
 name: Trigger Build
-
 on:
-    workflow_dispatch:
-        inputs:
-            ref:
-                description: 'Branch, tag or SHA to build'
-                required: true
-                default: 'main'
+    issue_comment:
+        types: [created]
 
 jobs:
-    trigger:
+    process-trigger:
+        # Only run if the comment is on a PR and contains the trigger phrase
+        if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/build') }}
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - name: Trigger build workflow
+            - name: Get PR details
+              id: pr-data
               uses: actions/github-script@v7
               with:
                   script: |
-                    await github.rest.actions.createWorkflowDispatch({
+                      // Get the PR information since we only have the issue number
+                      const { data: pullRequest } = await github.rest.pulls.get({
+                        owner: context.repo.owner,
+                        repo: context.repo.name,
+                        pull_number: context.issue.number
+                      });
+
+                      return { 
+                        sha: pullRequest.head.sha,
+                        number: pullRequest.number
+                      };
+
+            - name: Check comment author permissions
+              id: check-permissions
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      // Get the repository collaborators
+                      const { data: collaborators } = await github.rest.repos.listCollaborators({
+                        owner: context.repo.owner,
+                        repo: context.repo.name
+                      });
+
+                      // Check if the comment author is a collaborator
+                      const commenter = '${{ github.event.comment.user.login }}';
+                      const isCollaborator = collaborators.some(c => c.login === commenter);
+
+                      if (!isCollaborator) {
+                        await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.name,
+                          issue_number: context.issue.number,
+                          body: `@${commenter} Only repository collaborators can trigger builds.`
+                        });
+                        return { authorized: false };
+                      }
+
+                      return { authorized: true };
+
+            # Only proceed if the commenter is authorized
+            - name: Trigger build workflow
+              if: fromJSON(steps.check-permissions.outputs.result).authorized
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const prData = fromJSON(steps.pr-data.outputs.result);
+
+                      // Create a comment to acknowledge the build request
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.name,
+                        issue_number: context.issue.number,
+                        body: `Build triggered for commit ${prData.sha.substring(0, 7)}. [View workflow run](https://github.com/${{ github.repository }}/actions/workflows/build.yml)`
+                      });
+
+                      // Trigger the build workflow
+                      await github.rest.actions.createWorkflowDispatch({
                         owner: context.repo.owner,
                         repo: context.repo.name,
                         workflow_id: 'build.yml',
-                        ref: '${{ github.event.inputs.ref }}'
-                    });
+                        ref: 'main',
+                        inputs: {
+                          pr_number: `${prData.number}`,
+                          sha: prData.sha
+                        }
+                      });
