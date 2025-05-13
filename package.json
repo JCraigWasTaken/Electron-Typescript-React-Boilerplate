@@ -32,7 +32,7 @@
         "material-ui",
         "boilerplate"
     ],
-    "author": "John Craig",
+    "author": "John Craig <johnpatrickcraig@outlook.com> (https://github.com/JCraigWasTaken)",
     "license": "MIT",
     "build": {
         "appId": "com.electron.boilerplate",

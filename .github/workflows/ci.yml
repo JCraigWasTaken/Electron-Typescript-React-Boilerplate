@@ -32,6 +32,7 @@ jobs:
               run: npm run test:coverage -- --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
 
             - name: Upload coverage report
+              if: always()  # Run even if tests fail
               uses: actions/upload-artifact@v4
               with:
                   name: coverage-report
@@ -68,9 +69,7 @@ jobs:
                       ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-
                       ${{ runner.os }}-build-
 
-            - name: Build application
-              run: npm run build
-
+            # OS-specific distribution builds
             - name: Build distribution (Windows)
               if: matrix.os == 'windows-latest'
               run: npm run dist:win
@@ -84,6 +83,7 @@ jobs:
               run: npm run dist:linux
 
             - name: Upload distribution artifacts
+              if: always()  # Upload artifacts even if build fails
               uses: actions/upload-artifact@v4
               with:
                   name: dist-${{ matrix.os }}
