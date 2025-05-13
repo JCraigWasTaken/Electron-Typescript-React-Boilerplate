@@ -38,3 +38,54 @@ jobs:
                   name: coverage-report
                   path: coverage/
                   retention-days: 14
+
+    build:
+        runs-on: ${{ matrix.os }}
+        needs: quality
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest, macos-latest]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
+
+            - name: Cache build outputs
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      dist
+                      .webpack
+                  key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}-
+                      ${{ runner.os }}-build-
+
+            # OS-specific distribution builds
+            - name: Build distribution (Windows)
+              if: matrix.os == 'windows-latest'
+              run: npm run dist:win
+
+            - name: Build distribution (macOS)
+              if: matrix.os == 'macos-latest'
+              run: npm run dist:mac
+
+            - name: Build distribution (Linux)
+              if: matrix.os == 'ubuntu-latest'
+              run: npm run dist:linux
+
+            - name: Upload distribution artifacts
+              if: always()  # Upload artifacts even if build fails
+              uses: actions/upload-artifact@v4
+              with:
+                  name: dist-${{ matrix.os }}
+                  path: release/
+                  retention-days: 7
