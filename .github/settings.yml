@@ -12,7 +12,7 @@ repository:
     has_wiki: false
 
     # Disable downloads
-    has_downloads: false
+    has_downloads: true
 
     # Enable delete branch on merge
     delete_branch_on_merge: true
