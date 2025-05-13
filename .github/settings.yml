@@ -43,10 +43,10 @@ branches:
       required_status_checks:
         strict: true
         contexts: 
-          - "quality"
-          - "build (ubuntu-latest)"
-          - "build (windows-latest)"
-          - "build (macos-latest)"
+          - "CI / quality"
+          - "Build / build (ubuntu-latest)"
+          - "Build / build (windows-latest)"
+          - "Build / build (macos-latest)"
       
       # Allow admins to bypass restrictions
       enforce_admins: false
