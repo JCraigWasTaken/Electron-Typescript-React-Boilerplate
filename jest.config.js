@@ -13,8 +13,8 @@ module.exports = {
     transformIgnorePatterns: ["/node_modules/(?!(@mui|react-router|react-router-dom)/)"],
     collectCoverageFrom: [
         "src/renderer/views/**/*.[jt]s?(x)",
-        "src/renderer/App.ts(x)",
-        "src/renderer/AppRouter.ts(x)",
+        "src/renderer/App.ts?(x)",
+        "src/renderer/AppRouter.ts?(x)",
         "!src/renderer/views/**/*.test.[jt]s?(x)",
         "!src/renderer/views/**/*.spec.[jt]s?(x)",
         "!src/renderer/views/**/__tests__/**/*.[jt]s?(x)",
@@ -26,13 +26,13 @@ module.exports = {
             lines: 70,
             statements: 70,
         },
-        "src/renderer/App.ts(x)": {
+        "src/renderer/App.ts?(x)": {
             branches: 70,
             functions: 70,
             lines: 70,
             statements: 70,
         },
-        "src/renderer/AppRouter.ts(x)": {
+        "src/renderer/AppRouter.ts?(x)": {
             branches: 70,
             functions: 70,
             lines: 70,

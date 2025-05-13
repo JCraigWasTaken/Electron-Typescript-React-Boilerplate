@@ -131,6 +131,17 @@ These extensions will be automatically suggested when you open the project in VS
 
 ## GitHub Configuration
 
+### Repository Settings
+
+The repository uses [Settings Probot](https://github.com/apps/settings) to automate repository configuration. All settings are version controlled in `.github/settings.yml`, including:
+- Repository features (issues, projects, wiki)
+- Branch protection rules
+- Merge button configuration
+- Required status checks
+- Pull request review requirements
+
+When changes are made to `.github/settings.yml`, the Settings Probot automatically applies them to the repository. This ensures consistent repository configuration and makes it easy to version control these settings.
+
 ### Branch Protection
 
 The `main` branch is protected with the following rules:

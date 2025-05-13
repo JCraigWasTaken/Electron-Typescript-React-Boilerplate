@@ -1,120 +1,104 @@
 name: CI
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-  push:
-    branches: [ main ]
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
+    push:
+        branches: [main]
 
 jobs:
-  quality:
-    runs-on: ubuntu-latest
+    quality:
+        runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    # Restore cache for node_modules
-    - name: Cache node_modules
-      uses: actions/cache@v4
-      id: node-cache
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    
-    - name: Install dependencies
-      if: steps.node-cache.outputs.cache-hit != 'true'
-      run: npm ci
-    
-    - name: Check formatting
-      run: npm run format:check
-    
-    - name: Run linting
-      run: npm run lint
-    
-    - name: Run tests with coverage
-      run: npm run test:coverage
-    
-    # Generate HTML coverage report
-    - name: Generate coverage report
-      run: npx jest --coverage --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
-    
-    # Upload HTML coverage report
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: coverage/
-        retention-days: 14
+        steps:
+            - uses: actions/checkout@v4
 
-  build:
-    runs-on: ${{ matrix.os }}
-    needs: quality
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    # Restore cache for node_modules
-    - name: Cache node_modules
-      uses: actions/cache@v4
-      id: node-cache
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    
-    - name: Install dependencies
-      if: steps.node-cache.outputs.cache-hit != 'true'
-      run: npm ci
-    
-    # Cache build outputs
-    - name: Cache build
-      uses: actions/cache@v4
-      with:
-        path: |
-          dist
-          .webpack
-        key: ${{ runner.os }}-build-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-build-
-    
-    - name: Build application
-      run: npm run build
-      
-    # Test distribution build based on OS
-    - name: Build distribution (Windows)
-      if: matrix.os == 'windows-latest'
-      run: npm run dist:win
-      
-    - name: Build distribution (macOS)
-      if: matrix.os == 'macos-latest'
-      run: npm run dist:mac
-      
-    - name: Build distribution (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: npm run dist:linux
-      
-    # Upload artifacts
-    - name: Upload distribution artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist-${{ matrix.os }}
-        path: release/
-        retention-days: 7
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+                  cache-dependency-path: "**/package-lock.json"
+
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
+
+            - name: Cache node_modules
+              id: cache-node-modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                  key: ${{ runner.os }}-node-modules-electron-${{ hashFiles('package-lock.json') }}
+
+            - name: Check formatting
+              run: npm run format:check
+
+            - name: Run linting
+              run: npm run lint
+
+            - name: Run tests with coverage
+              run: npm run test:coverage -- --coverageReporters="html" --coverageReporters="text" --coverageReporters="text-summary" --coverageReporters="json-summary"
+
+            - name: Upload coverage report
+              if: always() # Run even if tests fail
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-report
+                  path: coverage/
+                  retention-days: 14
+
+    build:
+        runs-on: ${{ matrix.os }}
+        needs: quality
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest, macos-latest]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Restore node_modules
+              id: cache-node-modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                  key: ${{ runner.os }}-node-modules-electron-${{ hashFiles('package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-modules-electron-
+
+            - name: Install dependencies
+              if: steps.cache-node-modules.outputs.cache-hit != 'true'
+              run: npm ci --legacy-peer-deps
+
+            - name: Cache build outputs
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      dist
+                      .webpack
+                      node_modules/.cache
+                  key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', 'webpack.config.js') }}-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', 'webpack.config.js') }}-
+                      ${{ runner.os }}-build-
+
+            # OS-specific distribution builds
+            - name: Build distribution (Windows)
+              if: matrix.os == 'windows-latest'
+              run: npm run dist:win
+
+            - name: Build distribution (macOS)
+              if: matrix.os == 'macos-latest'
+              run: npm run dist:mac
+
+            - name: Build distribution (Linux)
+              if: matrix.os == 'ubuntu-latest'
+              run: npm run dist:linux
